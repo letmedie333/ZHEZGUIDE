@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-// Данные для таймлайна (чтобы код был чище)
+// Данные для таймлайна
 const HISTORY_DATA = [
   {
     year: '1928',
@@ -42,35 +42,35 @@ export default function History() {
   }, []);
 
   return (
-    <div className="bg-[#F9F9F9] min-h-screen pb-32">
+    <div className="bg-[#F9F9F9] min-h-screen pb-16 md:pb-32">
       
       {/* Заголовок страницы */}
-      <section className="w-full px-6 md:px-12 lg:px-20 pt-32 pb-16 max-w-5xl mx-auto text-center">
+      <section className="w-full px-5 sm:px-6 md:px-12 lg:px-20 pt-24 pb-12 md:pt-32 md:pb-16 max-w-5xl mx-auto text-center">
         <motion.p 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="text-orange-500 font-bold tracking-[0.3em] uppercase text-sm mb-6"
+          className="text-orange-500 font-bold tracking-[0.3em] uppercase text-xs sm:text-sm mb-4 sm:mb-6"
         >
           Сквозь время
         </motion.p>
         <motion.h1 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-tight"
+          className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-tight"
         >
           История <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-600">Жезказгана</span>
         </motion.h1>
       </section>
 
       {/* Анимированный таймлайн */}
-      <section className="w-full px-6 md:px-12 lg:px-20 max-w-6xl mx-auto">
-        <div className="space-y-32">
+      <section className="w-full px-5 sm:px-6 md:px-12 lg:px-20 max-w-6xl mx-auto">
+        <div className="space-y-20 md:space-y-32">
           {HISTORY_DATA.map((block, index) => {
-            // Чередуем расположение текста и картинки (слева-справа)
+            // Чередуем расположение текста и картинки (слева-справа) только на десктопе
             const isEven = index % 2 === 0;
 
             return (
               <div 
                 key={index} 
-                className={`flex flex-col gap-10 md:gap-20 items-center ${
+                className={`flex flex-col gap-8 md:gap-20 items-center ${
                   isEven ? 'md:flex-row' : 'md:flex-row-reverse'
                 }`}
               >
@@ -78,15 +78,15 @@ export default function History() {
                 <motion.div 
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }} // Анимация сработает, когда блок появится на экране
+                  viewport={{ once: true, margin: "-50px" }} // Триггер под мобилки
                   transition={{ duration: 0.8, ease: "easeOut" }}
                   className="w-full md:w-1/2"
                 >
-                  <p className="text-6xl md:text-8xl font-black text-slate-200 mb-4 tracking-tighter">
+                  <p className="text-5xl sm:text-6xl md:text-8xl font-black text-slate-200 mb-2 md:mb-4 tracking-tighter">
                     {block.year}
                   </p>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-6">{block.title}</h2>
-                  <p className="text-lg text-slate-600 leading-relaxed font-light">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4 md:mb-6">{block.title}</h2>
+                  <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-light">
                     {block.desc}
                   </p>
                 </motion.div>
@@ -95,7 +95,7 @@ export default function History() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true, margin: "-100px" }}
+                  viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                   className="w-full md:w-1/2 aspect-[4/3] overflow-hidden bg-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50"
                 >

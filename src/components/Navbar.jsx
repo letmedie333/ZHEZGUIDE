@@ -1,20 +1,35 @@
-// src/components/Navbar.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Compass, User, Menu, X, ArrowRight, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; // Импортируем наш хук
+import { useAuth } from '../context/AuthContext'; 
 
 export default function Navbar() {
   const location = useLocation();
-  const { currentUser, login, logout } = useAuth(); // Забираем глобальные функции
+  const { currentUser, login, logout } = useAuth(); 
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
   const isHome = location.pathname === '/';
   const isActive = (path) => location.pathname === path;
+
+  // ОПТИМИЗАЦИЯ: Закрываем меню при переходе на новую страницу
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  // ОПТИМИЗАЦИЯ: Блокируем скролл фона, если открыто меню или модалка
+  useEffect(() => {
+    if (isMobileMenuOpen || isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isMobileMenuOpen, isModalOpen]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,68 +42,117 @@ export default function Navbar() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Определяем имя: либо из инпута регистрации, либо вырезаем из почты
     const finalName = authMode === 'register' 
       ? formData.name 
       : formData.email.split('@')[0];
 
-    login(finalName, formData.email); // Вызываем глобальный вход!
+    login(finalName, formData.email); 
     setIsModalOpen(false);
     setFormData({ name: '', email: '', password: '' });
   };
 
+  // Логика прозрачности: если мы на главной И меню закрыто - шапка прозрачная
+  const isTransparent = isHome && !isMobileMenuOpen;
+
+  const navLinks = [
+    { path: '/', label: 'Главная' },
+    { path: '/about', label: 'О городе' },
+    { path: '/history', label: 'История' }
+  ];
+
   return (
     <>
-      <nav className={`w-full z-40 transition-all duration-300 ${isHome ? 'absolute top-0 bg-transparent border-b border-white/10 text-white' : 'sticky top-0 bg-white border-b border-slate-200/60 text-slate-900 shadow-sm'}`}>
+      <nav className={`w-full z-40 transition-all duration-300 ${isTransparent ? 'absolute top-0 bg-transparent border-b border-white/10 text-white' : 'sticky top-0 bg-white border-b border-slate-200/60 text-slate-900 shadow-sm'}`}>
         <div className="w-full px-6 md:px-12 lg:px-20">
           <div className="flex justify-between items-center h-24">
             
-            <Link to="/" className="flex items-center gap-2 group">
-              <Compass className={`w-7 h-7 transition-colors ${isHome ? 'text-white' : 'text-slate-900'}`} strokeWidth={2.5} />
-              <span className={`text-2xl font-bold tracking-widest uppercase transition-colors ${isHome ? 'text-white' : 'text-slate-900'}`}>ZhezGuide</span>
+            <Link to="/" className="flex items-center gap-2 group z-50 relative">
+              <Compass className={`w-7 h-7 transition-colors ${isTransparent ? 'text-white' : 'text-slate-900'}`} strokeWidth={2.5} />
+              <span className={`text-2xl font-bold tracking-widest uppercase transition-colors ${isTransparent ? 'text-white' : 'text-slate-900'}`}>ZhezGuide</span>
             </Link>
 
+            {/* Десктопные ссылки */}
             <div className="hidden md:flex items-center gap-12">
-              <Link to="/" className={`text-sm font-semibold tracking-wide uppercase transition-all relative pb-2 ${isActive('/') ? (isHome ? 'text-white font-bold' : 'text-orange-600 font-bold') : (isHome ? 'text-white/70 hover:text-white' : 'text-slate-500 hover:text-slate-900')}`}>
-                Главная {isActive('/') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></span>}
-              </Link>
-              <Link to="/about" className={`text-sm font-semibold tracking-wide uppercase transition-all relative pb-2 ${isActive('/about') ? (isHome ? 'text-white font-bold' : 'text-orange-600 font-bold') : (isHome ? 'text-white/70 hover:text-white' : 'text-slate-500 hover:text-slate-900')}`}>
-                О городе {isActive('/about') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></span>}
-              </Link>
-              <Link to="/history" className={`text-sm font-semibold tracking-wide uppercase transition-all relative pb-2 ${isActive('/history') ? (isHome ? 'text-white font-bold' : 'text-orange-600 font-bold') : (isHome ? 'text-white/70 hover:text-white' : 'text-slate-500 hover:text-slate-900')}`}>
-                История {isActive('/history') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></span>}
-              </Link>
+              {navLinks.map((link) => (
+                <Link key={link.path} to={link.path} className={`text-sm font-semibold tracking-wide uppercase transition-all relative pb-2 ${isActive(link.path) ? (isTransparent ? 'text-white font-bold' : 'text-orange-600 font-bold') : (isTransparent ? 'text-white/70 hover:text-white' : 'text-slate-500 hover:text-slate-900')}`}>
+                  {link.label} {isActive(link.path) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></span>}
+                </Link>
+              ))}
             </div>
 
-            <div className="flex items-center gap-6">
+            {/* Десктопный профиль + Мобильный бургер */}
+            <div className="flex items-center gap-6 z-50 relative">
               {currentUser ? (
-                <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md">
                       {currentUser.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className={`font-semibold text-sm tracking-wide ${isHome ? 'text-white' : 'text-slate-900'}`}>
+                    <span className={`font-semibold text-sm tracking-wide ${isTransparent ? 'text-white' : 'text-slate-900'}`}>
                       {currentUser.name}
                     </span>
                   </div>
-                  <button onClick={logout} className={`p-2 rounded-full transition-colors ${isHome ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-red-500 hover:bg-red-50'}`}>
+                  <button onClick={logout} className={`p-2 rounded-full transition-colors ${isTransparent ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-red-500 hover:bg-red-50'}`}>
                     <LogOut className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setIsModalOpen(true)} className={`hidden md:flex items-center gap-2 transition-colors font-semibold text-sm tracking-wide uppercase ${isHome ? 'text-white hover:text-orange-400' : 'text-slate-700 hover:text-orange-600'}`}>
+                <button onClick={() => setIsModalOpen(true)} className={`hidden md:flex items-center gap-2 transition-colors font-semibold text-sm tracking-wide uppercase ${isTransparent ? 'text-white hover:text-orange-400' : 'text-slate-700 hover:text-orange-600'}`}>
                   <User className="w-4 h-4" /> Войти
                 </button>
               )}
-              <button className={`md:hidden p-2 ${isHome ? 'text-white' : 'text-slate-900'}`}><Menu className="w-7 h-7" /></button>
+              
+              {/* Бургер меню */}
+              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`md:hidden p-2 transition-colors ${isTransparent ? 'text-white' : 'text-slate-900'}`}>
+                {isMobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+              </button>
             </div>
 
           </div>
         </div>
       </nav>
 
-      {/* Модалка остается прежней */}
+      {/* ВЫПАДАЮЩЕЕ МОБИЛЬНОЕ МЕНЮ */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -20 }} 
+            className="fixed inset-0 z-30 bg-white pt-28 px-6 pb-6 flex flex-col md:hidden overflow-y-auto"
+          >
+            <div className="flex flex-col gap-6 flex-grow">
+              {navLinks.map((link) => (
+                <Link key={link.path} to={link.path} className={`text-2xl font-black uppercase tracking-wide ${isActive(link.path) ? 'text-orange-500' : 'text-slate-900'}`}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-auto pt-8 border-t border-slate-100">
+              {currentUser ? (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md">
+                      {currentUser.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-bold text-xl text-slate-900 tracking-wide">{currentUser.name}</span>
+                  </div>
+                  <button onClick={logout} className="w-full flex items-center justify-center gap-2 p-4 rounded-xl text-red-500 bg-red-50 hover:bg-red-100 font-bold transition-colors">
+                    <LogOut className="w-5 h-5" /> Выйти
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsModalOpen(true); }} className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold tracking-wide uppercase flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                  <User className="w-5 h-5" /> Войти в профиль
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ТВОЯ ОРИГИНАЛЬНАЯ МОДАЛКА (Без изменений) */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
